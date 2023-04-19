@@ -47,7 +47,7 @@ def list_buy(message):
     mes=message.text.split()
     count=0
     for i in mes:
-        if type(i)==str and i!='':
+        if isinstance(i, str)==True and i!='':
             count+=1
             bot.send_message(message.chat.id, f'{count}) {i}')
 
