@@ -1,20 +1,27 @@
 import telebot
 from datetime import datetime
 from time import sleep
-from aiogram.types import ReplyKeyboardMarkup
-import KeyBoards
+from telebot import types
+bot = telebot.TeleBot('5540761456:AAHbhGv1J1dpV3ygCCmGCAncrYam05gdE-s')
+# from KeyBoard import markup
 
-bot=telebot.TeleBot('5540761456:AAHbhGv1J1dpV3ygCCmGCAncrYam05gdE-s')
 
 @bot.message_handler(commands=["start"])
+def start(message):
+    markup=types.InlineKeyboardMarkup(row_width=1)
+    item=types.InlineKeyboardButton('создай список покупок', callback_data='buy_list_bt')
+    markup.add(item)
+    bot.send_message(message.chat.id, 'привет, друг!', reply_markup=markup)
+    # bot.register_next_step_handler(message, time_lesson)
 
-def start(m, res=False):
-    bot.send_message(m.chat.id, 'Я на связи. Напиши мне что-нибудь )')
-    bot.register_next_step_handler(m, time_lesson)
-
+@bot.callback_query_handler(func=lambda call: True)
+def callback(call):
+    if call.message:
+        if call.data=='buy_list_bt':
+            bot.send_message(call.message.chat.id, 'перечисляй продукты в одну строку через пробел')
+            bot.register_next_step_handler(call.message, list_buy)
 
 @bot.message_handler(content_types=['text'])
-
 def handler_text(message):
     try:
         match message.text.strip().lower():
@@ -27,10 +34,11 @@ def handler_text(message):
     except:
         bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
+
 def time_lesson(message):
     global dt_now
     while True:
-        dt_now=datetime.now().strftime('%H:%M')
+        dt_now = datetime.now().strftime('%H:%M')
         match str(dt_now):
             case '9:28':
                 bot.send_message(message.chat.id, 'пора на урок')
@@ -49,21 +57,22 @@ def time_lesson(message):
 
         sleep(60)
 
+
 def list_buy(message):
-    mes=message.text.split()
-    count=0
+    mes = message.text.split()
+    count = 0
     for i in mes:
-        if type(i)==str and i!='':
-            count+=1
+        if type(i) == str and i != '':
+            count += 1
             bot.send_message(message.chat.id, f'{count}) {i}')
-    bot.send_message(message.chat.id, reply_markup=KeyBoards.inline_kb1)
-    
+
 def factorial(message):
-    cif=int(message.text.strip())
-    counter=1
-    for i in range(1,cif+1):
-        counter*=i
+    cif = int(message.text.strip())
+    counter = 1
+    for i in range(1, cif + 1):
+        counter *= i
     bot.send_message(message.chat.id, f'{counter}')
+
 
 while True:
     try:
