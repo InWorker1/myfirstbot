@@ -1,6 +1,8 @@
 import telebot
 from datetime import datetime
 from time import sleep
+from aiogram.types import ReplyKeyboardMarkup
+import KeyBoards
 
 bot=telebot.TeleBot('5540761456:AAHbhGv1J1dpV3ygCCmGCAncrYam05gdE-s')
 
@@ -14,12 +16,16 @@ def start(m, res=False):
 @bot.message_handler(content_types=['text'])
 
 def handler_text(message):
-    if message.text.strip() == 'создай список покупок':
-        bot.send_message(message.chat.id, 'отлично! начинай перечислять продукты в одну строку!!')
-        bot.register_next_step_handler(message, list_buy)
-    elif message.text.strip()=='факториал':
-        bot.send_message(message.chat.id, 'напиши число')
-        bot.register_next_step_handler(message, factorial)
+    try:
+        match message.text.strip().lower():
+            case 'создай список покупок':
+                bot.send_message(message.chat.id, 'отлично! начинай перечислять продукты в одну строку!!')
+                bot.register_next_step_handler(message, list_buy)
+            case 'факториал':
+                bot.send_message(message.chat.id, 'напиши число')
+                bot.register_next_step_handler(message, factorial)
+    except:
+        bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
 def time_lesson(message):
     global dt_now
@@ -47,10 +53,11 @@ def list_buy(message):
     mes=message.text.split()
     count=0
     for i in mes:
-        if isinstance(i, str)==True and i!='':
+        if type(i)==str and i!='':
             count+=1
             bot.send_message(message.chat.id, f'{count}) {i}')
-
+    bot.send_message(message.chat.id, reply_markup=KeyBoards.inline_kb1)
+    
 def factorial(message):
     cif=int(message.text.strip())
     counter=1
