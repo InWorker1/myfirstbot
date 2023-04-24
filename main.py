@@ -3,7 +3,7 @@ from datetime import datetime
 from time import sleep
 from telebot import types
 
-bot = telebot.TeleBot('5540761456:AAHbhGv1J1dpV3ygCCmGCAncrYam05gdE-s')
+bot = telebot.TeleBot('токен')
 
 @bot.message_handler(commands=["start"])    #начальная комманда старта
 def start(message):
