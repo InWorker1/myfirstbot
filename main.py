@@ -10,7 +10,8 @@ bot = telebot.TeleBot('токен')
 def start(message):
     markup=types.InlineKeyboardMarkup(row_width=1)
     item=types.InlineKeyboardButton('создай список покупок', callback_data='buy_list_bt')
-    markup.add(item)
+    item2=types.InlineKeyboardButton('начни следить за временем', callback_data='time_lesson_bt')
+    markup.add(item,item2)
     bot.send_message(message.chat.id, 'привет, друг!', reply_markup=markup)
     # bot.register_next_step_handler(message, time_lesson)
 
@@ -20,6 +21,9 @@ def callback(call):
         if call.data=='buy_list_bt':
             bot.send_message(call.message.chat.id, 'перечисляй продукты в одну строку через пробел')
             bot.register_next_step_handler(call.message, list_buy)
+        if call.data=='tiem_lesson_bt':
+            bot.send_message(call.message.chat.id, 'хорошо я слежу за временем, иди пока отдохни, а я напишу за 3 минуты до урока')
+            bot.register_next_step_handler(call.message, time_lesson)
 
 @bot.message_handler(content_types=['text'])      #ответы и шаги после определенного сообщения
 def handler_text(message):
@@ -35,7 +39,7 @@ def handler_text(message):
         bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
 
-def time_lesson(message):        
+def time_lesson(message):
     global dt_now
     while True:
         dt_now = datetime.now().strftime('%H:%M')
