@@ -6,7 +6,7 @@ bot = telebot.TeleBot('5540761456:AAHbhGv1J1dpV3ygCCmGCAncrYam05gdE-s')
 # from KeyBoard import markup
 
 
-@bot.message_handler(commands=["start"])
+@bot.message_handler(commands=["start"])    #начальная комманда старта
 def start(message):
     markup=types.InlineKeyboardMarkup(row_width=1)
     item=types.InlineKeyboardButton('создай список покупок', callback_data='buy_list_bt')
@@ -14,14 +14,14 @@ def start(message):
     bot.send_message(message.chat.id, 'привет, друг!', reply_markup=markup)
     # bot.register_next_step_handler(message, time_lesson)
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: True)       #комманда ответа на кнопку
 def callback(call):
     if call.message:
         if call.data=='buy_list_bt':
             bot.send_message(call.message.chat.id, 'перечисляй продукты в одну строку через пробел')
             bot.register_next_step_handler(call.message, list_buy)
 
-@bot.message_handler(content_types=['text'])
+@bot.message_handler(content_types=['text'])      #ответы и шаги после определенного сообщения
 def handler_text(message):
     try:
         match message.text.strip().lower():
@@ -35,7 +35,7 @@ def handler_text(message):
         bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
 
-def time_lesson(message):
+def time_lesson(message):        
     global dt_now
     while True:
         dt_now = datetime.now().strftime('%H:%M')
