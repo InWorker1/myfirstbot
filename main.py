@@ -3,7 +3,7 @@ from datetime import datetime
 from time import sleep
 from telebot import types
 
-bot = telebot.TeleBot('токен')
+bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
 
 @bot.message_handler(commands=["start"])    #начальная комманда старта
 def start(message):
@@ -11,7 +11,8 @@ def start(message):
     inline_markup=types.InlineKeyboardMarkup(row_width=1)
     item=types.InlineKeyboardButton('создай список покупок', callback_data='buy_list_bt')
     item2=types.InlineKeyboardButton('начни следить за временем', callback_data='time_lesson_bt')
-    inline_markup.add(item,item2)
+    item3=types.InlineKeyboardButton('поставить напоминалку', callback_data='reminder')
+    inline_markup.add(item,item2,item3)
     bot.send_message(message.chat.id, 'привет, друг!', reply_markup=inline_markup)
     # bot.register_next_step_handler(message, time_lesson)
 
@@ -24,12 +25,20 @@ def callback(call):
         case 'tiem_lesson_bt':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='хорошо я слежу за временем, иди пока отдохни, а я напишу за 3 минуты до урока')
             bot.register_next_step_handler(call.message, time_lesson)
-        case 'delete':     #callback который отвечает за удаление сообщения бота по нажатию кнопки
-            bot.delete_message(call.message.chat.id, call.message.message_id )
         case 'restart':
             for i in range(count_lb+2):
                 bot.delete_message(call.message.chat.id, call.message.message_id - i)
             start(call.message)
+        case 'delete':  # callback который отвечает за удаление сообщения бота по нажатию кнопки
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+        case 'reminder':
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='введите что будет сегодня и во сколько это будет')
+            bot.register_next_step_handler(call.message, reminder)
+        case 'delete_remind':
+            time_remind=''
+            str_remind=''
+            bot.register_next_step_handler(call.message, start)
+
 
 
 @bot.message_handler(content_types=['text'])      #ответы и шаги после определенного сообщения
@@ -66,6 +75,12 @@ def time_lesson(message):
                 bot.send_message(message.chat.id, 'пора на урок')
             case '15:20':
                 bot.send_message(message.chat.id, 'иди отдохни домой дружок)')
+            case time_remind:
+                remind_markup=types.InlineKeyboardMarkup(row_width=1)
+                rbt1=types.InlineKeyboardButton('выполнено', callback_data='delete_remind')
+                remind_markup.add(rbt1)
+                bot.send_message(message.chat.id, f'{str_remind}', reply_markup=remind_markup)
+
 
         sleep(60)
 
@@ -94,6 +109,15 @@ def factorial(message):
     for i in range(1, cif + 1):
         counter *= i
     bot.send_message(message.chat.id, f'факториал {cif} равен {counter}')
+
+def reminder(message):
+    global time_remind, str_remind
+    a=[message.text.split() for i in range(1)]
+    time_remind=a[0][-1]
+    str_remind=a[0][0]
+    print(time_remind, str_remind)
+    bot.register_next_step_handler(message, time_lesson)
+
 
 while True:
     try:
