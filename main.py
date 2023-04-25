@@ -93,7 +93,7 @@ def factorial(message):
     counter = 1
     for i in range(1, cif + 1):
         counter *= i
-    bot.send_message(message.chat.id, f'{counter}')
+    bot.send_message(message.chat.id, f'факториал {cif} равен {counter}')
 
 while True:
     try:
