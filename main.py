@@ -2,10 +2,13 @@ import telebot
 from datetime import datetime
 from time import sleep
 from telebot import types
+from threading import Thread
 
 bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
-# time_remind=''
-# str_remind=''
+
+time_remind=''
+str_remind=''
+dt_now=''
 
 @bot.message_handler(commands=["start"])    #начальная комманда старта
 def start(message):
@@ -57,8 +60,10 @@ def handler_text(message):
     except:
         bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
+
 def time_lesson():
     global dt_now
+    # flag=False
     while True:
         dt_now = datetime.now().strftime('%H:%M')
         match str(dt_now):
@@ -77,10 +82,10 @@ def time_lesson():
             case '15:20':
                 bot.send_message(mes_id, 'иди отдохни домой дружок)')
         if str(dt_now)==time_remind:
-            remind_markup=types.InlineKeyboardMarkup(row_width=1)
-            rbt1=types.InlineKeyboardButton('выполнено', callback_data='delete_remind')
-            remind_markup.add(rbt1)
-            bot.send_message(mes_id, f'{str_remind[:]}', reply_markup=remind_markup)
+                remind_markup=types.InlineKeyboardMarkup(row_width=1)
+                rbt1=types.InlineKeyboardButton('выполнено', callback_data='delete_remind')
+                remind_markup.add(rbt1)
+                bot.send_message(mes_id, f'{str_remind[:]}', reply_markup=remind_markup)
 
         sleep(60)
 
@@ -115,7 +120,7 @@ def reminder(message):
     str_remind=a[0][:-1]
     print(time_remind, str_remind)
     bot.send_message(message.chat.id, f'отлично в {time_remind} будет отправленно сообщение {str_remind}')
-    time_lesson()
+    Thread(target=time_lesson).start()
 
 
 while True:
