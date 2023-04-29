@@ -178,10 +178,12 @@ def reminder(message):
     global time_remind, str_remind
     time_remind = a[-1]
     str_remind = a[:-1]
+    if len(str_remind)>1:
+        str_remind = ' '.join(str_remind)
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     # cursor.execute(f"INSERT INTO login_id(id = {mes_id}) VALUES(remind=?);", (mes_id, ' '.join(str_remind)))
-    cursor.execute(f"UPDATE login_id SET remind = {' '.join(str_remind)} WHERE id = '{mes_id}';")
+    cursor.execute(f"""UPDATE login_id SET remind = '{str_remind}' WHERE id = '{mes_id}';""")
     connect.commit()
 
     print(time_remind, str_remind)
