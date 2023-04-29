@@ -12,8 +12,9 @@ bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
 time_remind = ' '
 str_remind = ' '
 dt_now = ' '
-count_reg=0
-FLAG=False
+tr = ' '
+sr = ' '
+mes_id = 0
 
 markup_delete = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton('удалить', callback_data='delete'))
 
@@ -23,7 +24,7 @@ def start(message):
     connect = sqlite3.connect('users.db')
 
     cursor = connect.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS login_id(id INTEGER,remind TEXT)""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS login_id(id INTEGER, remind TEXT, remind_time TEXT)""")
     connect.commit()
 
     people_id = message.chat.id
@@ -31,7 +32,7 @@ def start(message):
     data_u = cursor.fetchone()
     if data_u is None:
         user_id = message.chat.id
-        cursor.execute("INSERT INTO login_id VALUES(?, ?);", (user_id, str_remind))
+        cursor.execute("INSERT INTO login_id VALUES(?, ?, ?);", (user_id, str_remind, time_remind))
         connect.commit()
     #конец работы с бд
 
@@ -112,7 +113,9 @@ def handler_text(message):
 
 def time_lesson():
     global dt_now
-    flag=False
+    connect=sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    print('все работает')
     while True:
         dt_now = datetime.now().strftime('%H:%M')
         match str(dt_now):
@@ -131,14 +134,13 @@ def time_lesson():
             case '15:20':
                 bot.send_message(mes_id, 'иди отдохни домой дружок)')
                 break
-        if flag:
-            break
-        if str(dt_now) == time_remind:
+        if str(dt_now) == tr:
             remind_markup = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton('выполнено', callback_data='delete_remind'))
-            bot.send_message(mes_id, f'{" ".join(str_remind)}', reply_markup=remind_markup)
+            bot.send_message(mes_id, f'{sr}', reply_markup=remind_markup)
             break
+        print(f'проверка времени работает стабильно: {dt_now}')
         sleep(60)
-
+    print('закончило работу')
 
 def list_buy(message):
     global count_lb
@@ -175,20 +177,27 @@ def factorial(message):
 
 def reminder(message):
     a = message.text.split()
-    global time_remind, str_remind
+    global time_remind, str_remind, mes_id, tr, sr
+    mes_id = message.chat.id
     time_remind = a[-1]
     str_remind = a[:-1]
-    if len(str_remind)>1:
-        str_remind = ' '.join(str_remind)
+    str_remind = ' '.join(str_remind)
+    print(time_remind, str_remind)
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    # cursor.execute(f"INSERT INTO login_id(id = {mes_id}) VALUES(remind=?);", (mes_id, ' '.join(str_remind)))
     cursor.execute(f"""UPDATE login_id SET remind = '{str_remind}' WHERE id = '{mes_id}';""")
+    cursor.execute(f"""UPDATE login_id SET remind_time = '{time_remind}' WHERE id = '{mes_id}'""")
     connect.commit()
 
-    print(time_remind, str_remind)
-    bot.send_message(message.chat.id, f'отлично в {time_remind} будет отправленно сообщение: {str_remind}')
+    tr=str(cursor.execute(f"SELECT remind_time FROM login_id WHERE id = '{message.chat.id}'").fetchone())
+    sr=str(cursor.execute(f"SELECT remind FROM login_id WHERE id = '{message.chat.id}'").fetchone())
+    for i in "(''),":
+        tr = tr.replace(f"{i}", '')
+        sr = sr.replace(f"{i}", '')
+    bot.send_message(message.chat.id, text = f'отлично в {tr} будет отправленно сообщение: {sr}')
+    print(tr)
     Thread(target=time_lesson).start()
+
 
 while True:
     try:
