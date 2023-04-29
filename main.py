@@ -187,7 +187,7 @@ def reminder(message):
     connect.commit()
 
     print(time_remind, str_remind)
-    bot.send_message(message.chat.id, f'отлично в {time_remind} будет отправленно сообщение: {" ".join(str_remind)}')
+    bot.send_message(message.chat.id, f'отлично в {time_remind} будет отправленно сообщение: {str_remind}')
     Thread(target=time_lesson).start()
 
 while True:
