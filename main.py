@@ -115,7 +115,7 @@ def time_lesson():
     global dt_now
     connect=sqlite3.connect('users.db')
     cursor = connect.cursor()
-    print('все работает')
+    print('проверка времени началась')
     while True:
         dt_now = datetime.now().strftime('%H:%M')
         match str(dt_now):
@@ -140,7 +140,7 @@ def time_lesson():
             break
         print(f'проверка времени работает стабильно: {dt_now}')
         sleep(60)
-    print('закончило работу')
+    print('проверка времени закончила работу')
 
 def list_buy(message):
     global count_lb
@@ -195,7 +195,6 @@ def reminder(message):
         tr = tr.replace(f"{i}", '')
         sr = sr.replace(f"{i}", '')
     bot.send_message(message.chat.id, text = f'отлично в {tr} будет отправленно сообщение: {sr}')
-    print(tr)
     Thread(target=time_lesson).start()
 
 
