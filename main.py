@@ -5,8 +5,25 @@ from telebot import types
 from threading import Thread
 import texts
 import sqlite3
+import functools
 
+def convert_tuple(c_tuple):
+  str=''
+  for i in c_tuple:
+    str=str+i
+  return str
 
+def edit_tuple(self):
+    self = str(self)
+    for i in "(''),":
+        try:
+            self = self.replace(f"{i}", '')
+        except:
+            continue
+    try:
+        return str(self)
+    except:
+        return int(self)
 bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
 
 time_remind = ' '
@@ -92,6 +109,10 @@ def callback(call):
         case 'delete_remind':
             for i in range(4):
                 bot.delete_message(call.message.chat.id, call.message.message_id - i)
+            conn = sqlite3.connect('users.db')
+            cursor = conn.cursor()
+            cursor.execute(f"UPDATE login_id SET remind_time = '{None}' WHERE id = '{mes_id}'")
+            conn.commit()
             start(call.message)
 
 
@@ -115,8 +136,9 @@ def time_lesson():
     global dt_now
     connect=sqlite3.connect('users.db')
     cursor = connect.cursor()
-    print('проверка времени началась')
+    print('все работает')
     while True:
+        remind_time = cursor.execute("SELECT remind_time FROM login_id")
         dt_now = datetime.now().strftime('%H:%M')
         match str(dt_now):
             case '9:28':
@@ -134,10 +156,16 @@ def time_lesson():
             case '15:20':
                 bot.send_message(mes_id, 'иди отдохни домой дружок)')
                 break
-        if str(dt_now) == tr:
-            remind_markup = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton('выполнено', callback_data='delete_remind'))
-            bot.send_message(mes_id, f'{sr}', reply_markup=remind_markup)
-            break
+        for tt in remind_time:
+            tt = convert_tuple(tt)
+            for i in "(''),":
+                tt = tt.replace(f"{i}", '')
+            if str(dt_now) == tt:
+                mes_id = cursor.execute(f"SELECT id FROM login_id WHERE remind_time = '{tt}'")
+                mes_id = edit_tuple(functools.reduce(lambda x: int(x), mes_id))
+                remind_markup = types.InlineKeyboardMarkup().add(
+                    types.InlineKeyboardButton('выполнено', callback_data='delete_remind'))
+                bot.send_message(mes_id, f'{sr}', reply_markup=remind_markup)
         print(f'проверка времени работает стабильно: {dt_now}')
         sleep(60)
     print('проверка времени закончила работу')
@@ -164,17 +192,6 @@ def factorial(message):
         counter *= i
     bot.register_next_step_handler(bot.send_message(message.chat.id, f'факториал {cif} равен {counter}', reply_markup=markup_delete), start)
 
-
-# def reminder(message):
-#     a = [message.text.split() for _ in range(1)]
-#     global time_remind, str_remind
-#     time_remind = a[0][-1]
-#     str_remind = a[0][:-1]
-#     print(time_remind, str_remind)
-#     bot.send_message(message.chat.id, f'отлично в {time_remind} будет отправленно сообщение: {" ".join(str_remind)}')
-#     Thread(target=time_lesson).start()
-
-
 def reminder(message):
     a = message.text.split()
     global time_remind, str_remind, mes_id, tr, sr
@@ -194,7 +211,9 @@ def reminder(message):
     for i in "(''),":
         tr = tr.replace(f"{i}", '')
         sr = sr.replace(f"{i}", '')
-    bot.send_message(message.chat.id, text = f'отлично в {tr} будет отправленно сообщение: {sr}')
+    remind_markup = types.InlineKeyboardMarkup().add(
+        types.InlineKeyboardButton('удалить напоминание', callback_data='delete_remind'))
+    bot.send_message(message.chat.id, text = f'отлично в {tr} будет отправленно сообщение: {sr}', reply_markup=remind_markup)
     Thread(target=time_lesson).start()
 
 
