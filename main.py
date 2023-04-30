@@ -133,7 +133,7 @@ def handler_text(message):
 
 
 def time_lesson():
-    global dt_now
+    global dt_now, mes_id
     connect=sqlite3.connect('users.db')
     cursor = connect.cursor()
     print('все работает')
