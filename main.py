@@ -18,7 +18,8 @@ def edit_tuple(self):
     for i in "(''),":
         try:
             self = self.replace(i, '')
-        pass
+        exept:
+            pass
     try:
         return self
     except:
