@@ -62,6 +62,7 @@ def start(message):
     inline_markup.add(item, item2, item3)
     bot.send_message(message.chat.id, 'привет, друг! Ты можешь прописать /info, чтобы узнать какие еще есть функции',
                      reply_markup=inline_markup)
+    time_lesson()
 
 @bot.message_handler(commands=['delete_id'])
 def delete_id(message):
@@ -133,7 +134,7 @@ def handler_text(message):
 
 
 def time_lesson():
-    global dt_now, mes_id
+    global dt_now, mes_id, sr
     connect=sqlite3.connect('users.db')
     cursor = connect.cursor()
     print('все работает')
@@ -163,7 +164,7 @@ def time_lesson():
             if str(dt_now) == tt:
                 mes_id = cursor.execute(f"SELECT id FROM login_id WHERE remind_time = '{tt}'")
                 mes_id = edit_tuple(functools.reduce(lambda x: int(x), mes_id))
-                sr = edit_tuple(cursor.execute(f"SELECT remind FROM login_id WHERE id = {mes_id}"))
+                sr = edit_tuple(cursor.execute(f"SELECT remind FROM login_id WHERE id = {mes_id}").fetchone())
                 remind_markup = types.InlineKeyboardMarkup().add(
                     types.InlineKeyboardButton('выполнено', callback_data='delete_remind'))
                 bot.send_message(mes_id, f'{sr}', reply_markup=remind_markup)
@@ -215,7 +216,7 @@ def reminder(message):
     remind_markup = types.InlineKeyboardMarkup().add(
         types.InlineKeyboardButton('удалить напоминание', callback_data='delete_remind'))
     bot.send_message(message.chat.id, text = f'отлично в {tr} будет отправленно сообщение: {sr}', reply_markup=remind_markup)
-    Thread(target=time_lesson).start()
+    # Thread(target=time_lesson).start()
 
 
 while True:
