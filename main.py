@@ -8,20 +8,19 @@ import sqlite3
 import functools
 
 def convert_tuple(c_tuple):
-  str=''
+  stroka=''
   for i in c_tuple:
-    str=str+i
-  return str
+    stroka+=i
+  return stroka
 
 def edit_tuple(self):
     self = str(self)
     for i in "(''),":
         try:
-            self = self.replace(f"{i}", '')
-        except:
-            continue
+            self = self.replace(i, '')
+        pass
     try:
-        return str(self)
+        return self
     except:
         return int(self)
 bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
