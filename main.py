@@ -6,12 +6,15 @@ from threading import Thread
 import texts
 import sqlite3
 import functools
+from parser import curs_euro, curs_dollar
+
 
 def convert_tuple(c_tuple):
-  stroka=''
-  for i in c_tuple:
-    stroka+=i
-  return stroka
+    stroka = ''
+    for i in c_tuple:
+        stroka += i
+    return stroka
+
 
 def edit_tuple(self):
     self = str(self)
@@ -24,6 +27,8 @@ def edit_tuple(self):
         return self
     except:
         return int(self)
+
+
 bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
 
 time_remind = ' '
@@ -32,8 +37,10 @@ dt_now = ' '
 tr = ' '
 sr = ' '
 mes_id = 0
+count_lb = 0
 
 markup_delete = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton('удалить', callback_data='delete'))
+
 
 @bot.message_handler(commands=["start"])  # начальная комманда старта
 def start(message):
@@ -51,7 +58,7 @@ def start(message):
         user_id = message.chat.id
         cursor.execute("INSERT INTO login_id VALUES(?, ?, ?);", (user_id, str_remind, time_remind))
         connect.commit()
-    #конец работы с бд
+    # конец работы с бд
 
     global mes_id
     mes_id = message.chat.id
@@ -59,19 +66,22 @@ def start(message):
     item = types.InlineKeyboardButton('создать список покупок', callback_data='buy_list_bt')
     item2 = types.InlineKeyboardButton('начать следить за временем', callback_data='time_lesson_bt')
     item3 = types.InlineKeyboardButton('поставить напоминалку', callback_data='reminder')
-    inline_markup.add(item, item2, item3)
+    item4 = types.InlineKeyboardButton('посмотреть курс валют', callback_data='curs')
+    inline_markup.add(item, item2, item3, item4)
     bot.send_message(message.chat.id, 'привет, друг! Ты можешь прописать /info, чтобы узнать какие еще есть функции',
                      reply_markup=inline_markup)
     time_lesson()
+
 
 @bot.message_handler(commands=['delete_id'])
 def delete_id(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
 
-    people_id=message.chat.id
+    people_id = message.chat.id
     cursor.execute(f"DELETE FROM login_id WHERE id = {people_id}")
     connect.commit()
+
 
 @bot.message_handler(commands=['factorial'])  # Комманда факториал
 def start_factorial(message):
@@ -85,6 +95,7 @@ def getinfo(message):
 
 @bot.callback_query_handler(func=lambda call: True)  # комманда ответа на кнопку
 def callback(call):
+    global count_lb
     match call.data:
         case 'buy_list_bt':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -94,14 +105,15 @@ def callback(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text='хорошо я слежу за временем, иди пока отдохни, а я напишу за 3 минуты до урока')
             time_lesson()
-        case 'restart_lb':
+        case 'delete_lb':
             for i in range(count_lb + 2):
                 bot.delete_message(call.message.chat.id, call.message.message_id - i)
+                count_lb -= 1
             start(call.message)
         case 'delete':  # callback который отвечает за удаление сообщения бота по нажатию кнопки
             bot.delete_message(call.message.chat.id, call.message.message_id)
-            if count_lb>0:
-                count_lb-=1
+            if count_lb > 0:
+                count_lb -= 1
             bot.delete_message(call.message.chat.id, call.message.message_id)
         case 'reminder':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -115,6 +127,8 @@ def callback(call):
             cursor.execute(f"UPDATE login_id SET remind_time = '{None}' WHERE id = '{mes_id}'")
             conn.commit()
             start(call.message)
+        case 'curs':
+            curs_money(call.message)
 
 
 @bot.message_handler(content_types=['text'])  # ответы и шаги после определенного сообщения
@@ -132,10 +146,9 @@ def handler_text(message):
     except:
         bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
-
 def time_lesson():
     global dt_now, mes_id, sr
-    connect=sqlite3.connect('users.db')
+    connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     print('все работает')
     while True:
@@ -175,13 +188,13 @@ def time_lesson():
 def list_buy(message):
     global count_lb
     mes = message.text.split()
-    count_lb=0
+    count_lb = 0
     for i in range(len(mes)):
         if type(mes[i]) == str and mes[i] != '':
             count_lb += 1
             if count_lb == len(mes):
                 restart_lb = types.InlineKeyboardMarkup().add(
-                    types.InlineKeyboardButton('вернуться к выбору комманды', callback_data='restart_lb'))
+                    types.InlineKeyboardButton('вернуться к выбору комманды', callback_data='delete_lb'))
                 bot.send_message(message.chat.id, f'{count_lb}) {mes[i]}', reply_markup=restart_lb)
                 break
             bot.send_message(message.chat.id, f'{count_lb}) {mes[i]}', reply_markup=markup_delete)
@@ -192,7 +205,8 @@ def factorial(message):
     counter = 1
     for i in range(1, cif + 1):
         counter *= i
-    bot.register_next_step_handler(bot.send_message(message.chat.id, f'факториал {cif} равен {counter}', reply_markup=markup_delete), start)
+    bot.register_next_step_handler(
+        bot.send_message(message.chat.id, f'факториал {cif} равен {counter}', reply_markup=markup_delete), start)
 
 def reminder(message):
     a = message.text.split()
@@ -208,16 +222,26 @@ def reminder(message):
     cursor.execute(f"""UPDATE login_id SET remind_time = '{time_remind}' WHERE id = '{mes_id}'""")
     connect.commit()
 
-    tr=str(cursor.execute(f"SELECT remind_time FROM login_id WHERE id = '{message.chat.id}'").fetchone())
-    sr=str(cursor.execute(f"SELECT remind FROM login_id WHERE id = '{message.chat.id}'").fetchone())
+    tr = str(cursor.execute(f"SELECT remind_time FROM login_id WHERE id = '{message.chat.id}'").fetchone())
+    sr = str(cursor.execute(f"SELECT remind FROM login_id WHERE id = '{message.chat.id}'").fetchone())
     for i in "(''),":
         tr = tr.replace(f"{i}", '')
         sr = sr.replace(f"{i}", '')
     remind_markup = types.InlineKeyboardMarkup().add(
         types.InlineKeyboardButton('удалить напоминание', callback_data='delete_remind'))
-    bot.send_message(message.chat.id, text = f'отлично в {tr} будет отправленно сообщение: {sr}', reply_markup=remind_markup)
+    bot.send_message(message.chat.id, text=f'отлично в {tr} будет отправленно сообщение: {sr}',
+                     reply_markup=remind_markup)
     # Thread(target=time_lesson).start()
 
+def curs_money(message):
+    bot.send_message(message.chat.id, f'1 доллар на данный момент равен: {curs_dollar}', reply_markup=markup_delete)
+    bot.send_message(message.chat.id, f'1 евро на данный момент равен: {curs_euro}', reply_markup=markup_delete)
+
+# def proverka():
+#     while True:
+#         print(count_lb)
+#         sleep(10)
+# Thread(target=proverka).start()
 
 while True:
     try:
