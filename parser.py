@@ -10,7 +10,7 @@ soup_d = bs(res_d.text,  'html.parser')
 
 dollar = soup_d.find_all('span', class_='chart__info__sum')
 for i in dollar:
-    curs_dollar += i.text
+    curs_dollar += '' if i == ' ' else i.text
 
 url_euro = 'https://quote.ru/ticker/59090'
 res_e = requests.get(url_euro)
@@ -18,7 +18,7 @@ soup_e = bs(res_e.text, 'html.parser')
 
 euro = soup_e.find_all('div', class_="MuiGrid-root MuiGrid-item quote-style-1jaw3oe")
 for i in euro:
-    curs_euro += i.text
+    curs_euro += '' if i == ' ' else i.text
 
 print(curs_euro)
 print(curs_dollar)
