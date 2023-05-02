@@ -162,6 +162,7 @@ def time_lesson():
             if str(dt_now) == tt:
                 mes_id = cursor.execute(f"SELECT id FROM login_id WHERE remind_time = '{tt}'")
                 mes_id = edit_tuple(functools.reduce(lambda x: int(x), mes_id))
+                sr = edit_tuple(cursor.execute(f"SELECT remind FROM login_id WHERE id = {mes_id}"))
                 remind_markup = types.InlineKeyboardMarkup().add(
                     types.InlineKeyboardButton('выполнено', callback_data='delete_remind'))
                 bot.send_message(mes_id, f'{sr}', reply_markup=remind_markup)
