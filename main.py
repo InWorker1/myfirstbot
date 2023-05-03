@@ -6,7 +6,7 @@ from threading import Thread
 import texts
 import sqlite3
 import functools
-from parser import curs_euro, curs_dollar
+import parser as pr
 
 
 def convert_tuple(c_tuple):
@@ -38,6 +38,8 @@ tr = ' '
 sr = ' '
 mes_id = 0
 count_lb = 0
+tempa = pr.getWeather('intgradus')
+veter = pr.getWeather('intwind')
 
 markup_delete = types.InlineKeyboardMarkup().add(types.InlineKeyboardButton('удалить', callback_data='delete'))
 
@@ -70,7 +72,7 @@ def start(message):
     inline_markup.add(item, item2, item3, item4)
     bot.send_message(message.chat.id, 'привет, друг! Ты можешь прописать /info, чтобы узнать какие еще есть функции',
                      reply_markup=inline_markup)
-    time_lesson()
+    time_tracking()
 
 
 @bot.message_handler(commands=['delete_id'])
@@ -93,6 +95,32 @@ def getinfo(message):
     bot.send_message(message.chat.id, texts.info)
 
 
+@bot.message_handler(commands=['getweather'])
+def getWeather(message):
+    bot.send_message(message.chat.id, f'{pr.getWeather("text")} {pr.getWeather("gradus")}. {pr.getWeather("wind")}')
+    if (pr.getWeather('intgradus') > 0 and pr.getWeather('intgradus') < 5) and (
+            pr.getWeather('intwind') > 3 and pr.getWeather('intwind') < 8):
+        bot.send_message(message.chat.id, 'Нужно надеть куртку шапку и если чувствительны к холоду - шарф')
+    elif (pr.getWeather('intgradus') >= 12 and pr.getWeather('intgradus') <= 14) and pr.getWeather('intwind') >= 2:
+        bot.send_message(message.chat.id, 'На улице тепло, но не очень приятно. Советую одеть на кофту куртку.')
+    elif tempa >= 7 and tempa < 12 and veter >= 0 and veter <= 3:
+        bot.send_message(message.chat.id, 'Прохладно, легкая куртка')
+    elif tempa >=7 and tempa <12 and veter >= 3 and veter <= 6:
+        bot.send_message(message.chat.id, 'Прохладно легкая куртка , если чувствительны к холоду шапка')
+    elif tempa >= 7 and tempa < 12 and veter >= 6 and veter <= 9:
+        bot.send_message(message.chat.id, 'Лучше легкая куртка , лучше надеть вещи с капюшоном или надеть шапку если чувствительны к холоду то взять с собой шарф не помешает')
+    elif tempa >= 12 and tempa <= 15 and veter >= 0 and veter <= 9:
+        bot.send_message(message.chat.id, 'легкая куртка')
+    elif tempa >= 16 and tempa <= 17 and veter >= 0 and veter <= 9:
+        bot.send_message(message.chat.id, 'кофта или толстовка , если чувствительны к холоду можно надеть легкую куртку')
+    elif tempa >= 17 and tempa <= 20 and veter >= 0 and veter <= 6:
+        bot.send_message(message.chat.id, 'кофта или толстовка')
+    elif tempa >= 17 and tempa <= 20 and veter >= 6 and veter <= 9:
+        bot.send_message(message.chat.id, 'тепло кофта или толстовка с капюшоном если чувствительны к холоду , легкая курткa')
+    elif (pr.getWeather('intgradus') == 0) and pr.getWeather('intwind') > 1:
+        bot.send_message(message.chat.id, 'Одень, пожалуй, крутку с кофтой. Шапка бы тоже не помешала')
+
+
 @bot.callback_query_handler(func=lambda call: True)  # комманда ответа на кнопку
 def callback(call):
     global count_lb
@@ -104,7 +132,7 @@ def callback(call):
         case 'time_lesson_bt':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text='хорошо я слежу за временем, иди пока отдохни, а я напишу за 3 минуты до урока')
-            time_lesson()
+            time_tracking()
         case 'delete_lb':
             for i in range(count_lb + 2):
                 bot.delete_message(call.message.chat.id, call.message.message_id - i)
@@ -146,7 +174,8 @@ def handler_text(message):
     except:
         bot.send_message(message.chat.id, 'не понял вас. посмотрите комманды и повторите, что хотели мне сказать')
 
-def time_lesson():
+
+def time_tracking():
     global dt_now, mes_id, sr
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
@@ -185,6 +214,7 @@ def time_lesson():
         sleep(60)
     print('проверка времени закончила работу')
 
+
 def list_buy(message):
     global count_lb
     mes = message.text.split()
@@ -207,6 +237,7 @@ def factorial(message):
         counter *= i
     bot.register_next_step_handler(
         bot.send_message(message.chat.id, f'факториал {cif} равен {counter}', reply_markup=markup_delete), start)
+
 
 def reminder(message):
     a = message.text.split()
@@ -233,9 +264,11 @@ def reminder(message):
                      reply_markup=remind_markup)
     # Thread(target=time_lesson).start()
 
+
 def curs_money(message):
-    bot.send_message(message.chat.id, f'1 доллар на данный момент равен: {curs_dollar}', reply_markup=markup_delete)
-    bot.send_message(message.chat.id, f'1 евро на данный момент равен: {curs_euro}', reply_markup=markup_delete)
+    bot.send_message(message.chat.id, f'1 доллар на данный момент равен: {pr.getDollar()}', reply_markup=markup_delete)
+    bot.send_message(message.chat.id, f'1 евро на данный момент равен: {pr.getEuro()}', reply_markup=markup_delete)
+
 
 # def proverka():
 #     while True:
