@@ -24,9 +24,9 @@ def edit_tuple(self):
         except:
             pass
     try:
-        return self
-    except:
         return int(self)
+    except:
+        return self
 
 
 bot = telebot.TeleBot('5891292416:AAHDoVsvYKOhVmGGNugX3nOFoM-GeYiKOuc')
@@ -105,20 +105,23 @@ def getWeather(message):
         bot.send_message(message.chat.id, 'На улице тепло, но не очень приятно. Советую одеть на кофту куртку.')
     elif tempa >= 7 and tempa < 12 and veter >= 0 and veter <= 3:
         bot.send_message(message.chat.id, 'Прохладно, легкая куртка')
-    elif tempa >=7 and tempa <12 and veter >= 3 and veter <= 6:
+    elif tempa >= 7 and tempa < 12 and veter >= 3 and veter <= 6:
         bot.send_message(message.chat.id, 'Прохладно легкая куртка , если чувствительны к холоду шапка')
     elif tempa >= 7 and tempa < 12 and veter >= 6 and veter <= 9:
-        bot.send_message(message.chat.id, 'Лучше легкая куртка , лучше надеть вещи с капюшоном или надеть шапку если чувствительны к холоду то взять с собой шарф не помешает')
+        bot.send_message(message.chat.id,
+                         'Лучше легкая куртка , лучше надеть вещи с капюшоном или надеть шапку если чувствительны к холоду то взять с собой шарф не помешает')
     elif tempa >= 12 and tempa <= 15 and veter >= 0 and veter <= 9:
         bot.send_message(message.chat.id, 'легкая куртка')
     elif tempa >= 16 and tempa <= 17 and veter >= 0 and veter <= 9:
-        bot.send_message(message.chat.id, 'кофта или толстовка , если чувствительны к холоду можно надеть легкую куртку')
+        bot.send_message(message.chat.id,
+                         'кофта или толстовка , если чувствительны к холоду можно надеть легкую куртку')
     elif tempa >= 17 and tempa <= 20 and veter >= 0 and veter <= 6:
         bot.send_message(message.chat.id, 'кофта или толстовка')
     elif tempa >= 17 and tempa <= 20 and veter >= 6 and veter <= 9:
-        bot.send_message(message.chat.id, 'тепло кофта или толстовка с капюшоном если чувствительны к холоду , легкая курткa')
+        bot.send_message(message.chat.id,
+                         'тепло кофта или толстовка с капюшоном если чувствительны к холоду , легкая курткa')
     elif (pr.getWeather('intgradus') == 0) and pr.getWeather('intwind') > 1:
-        bot.send_message(message.chat.id, 'Одень, пожалуй, крутку с кофтой. Шапка бы тоже не помешала')
+        bot.send_message(message.chat.id, 'Одень, пожалуй, куртку с кофтой. Шапка бы тоже не помешала')
 
 
 @bot.callback_query_handler(func=lambda call: True)  # комманда ответа на кнопку
@@ -176,7 +179,7 @@ def handler_text(message):
 
 
 def time_tracking():
-    global dt_now, mes_id, sr
+    global dt_now, sr
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     print('все работает')
@@ -200,9 +203,9 @@ def time_tracking():
                 bot.send_message(mes_id, 'иди отдохни домой дружок)')
                 break
         for tt in remind_time:
-            tt = convert_tuple(tt)
-            for i in "(''),":
-                tt = tt.replace(f"{i}", '')
+            tt = edit_tuple(convert_tuple(tt))
+            # for i in "(''),":
+            #     tt = tt.replace(f"{i}", '')
             if str(dt_now) == tt:
                 mes_id = cursor.execute(f"SELECT id FROM login_id WHERE remind_time = '{tt}'")
                 mes_id = edit_tuple(functools.reduce(lambda x: int(x), mes_id))
